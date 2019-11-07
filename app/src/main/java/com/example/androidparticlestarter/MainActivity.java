@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -32,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private ParticleDevice mDevice;
     TextView startTimer;
     long startTime = 0;
+    int seconds = 0;
+    TextView timeChangeLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,14 +53,18 @@ public class MainActivity extends AppCompatActivity {
                 if (b.getText().equals("stop")) {
                     timerHandler.removeCallbacks(timerRunnable);
                     b.setText("start");
+
+                } else {
+                    startTime = System.currentTimeMillis();
+                    timerHandler.postDelayed(timerRunnable, 0);
                     Async.executeAsync(ParticleCloudSDK.getCloud(), new Async.ApiWork<ParticleCloud, Object>() {
                         @Override
                         public Object callApi(@NonNull ParticleCloud particleCloud) throws ParticleCloudException, IOException {
                             Log.d(TAG, "Availble functions: " + mDevice.getFunctions());
                             List<String> functionParameters = new ArrayList<String>();
-                            functionParameters.add("5");
+                            functionParameters.add(Long.toString(startTime));
                             try {
-                                mDevice.callFunction("score", functionParameters);
+                                mDevice.callFunction("stime", functionParameters);
 
                             } catch (ParticleDevice.FunctionDoesNotExistException e1) {
                                 e1.printStackTrace();
@@ -80,28 +87,124 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
 
-                } else {
-                    startTime = System.currentTimeMillis();
-                    timerHandler.postDelayed(timerRunnable, 0);
+
+
                     b.setText("stop");
                 }
             }
         });
 
+        SeekBar seekBar = findViewById(R.id.seekBar);
+
+        seekBar.setProgress(1);
+        seekBar.setMax(20);
+
+        seekBar.setOnSeekBarChangeListener(seekBarChangeListener);
+        int progress = seekBar.getProgress();
+        this.timeChangeLabel = findViewById(R.id.scrollTime);
+        this.timeChangeLabel.setText("" + progress);
+
+
+
     }
+
+    SeekBar.OnSeekBarChangeListener seekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            timeChangeLabel.setText("" + progress);
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+        }
+    };
+
+
     Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
 
         @Override
         public void run() {
             long millis = System.currentTimeMillis() - startTime;
-            int seconds = (int) (millis / 1000);
+            seconds = (int) (millis / 1000);
             int minutes = seconds / 60;
-            seconds = seconds % 60;
+            seconds = seconds % 100;
+
+            Async.executeAsync(ParticleCloudSDK.getCloud(), new Async.ApiWork<ParticleCloud, Object>() {
+                @Override
+                public Object callApi(@NonNull ParticleCloud particleCloud) throws ParticleCloudException, IOException {
+                    Log.d(TAG, "Availble functions: " + mDevice.getFunctions());
+                    List<String> functionParameters = new ArrayList<String>();
+                    functionParameters.add(Integer.toString(seconds));
+                    try {
+                        mDevice.callFunction("mtime", functionParameters);
+
+                    } catch (ParticleDevice.FunctionDoesNotExistException e1) {
+                        e1.printStackTrace();
+                    }
+
+
+                    return -1;
+                }
+
+                @Override
+                public void onSuccess(Object o) {
+                    // put your success message here
+                    Log.d(TAG, "Success!");
+                }
+
+                @Override
+                public void onFailure(ParticleCloudException exception) {
+                    // put your error handling code here
+                    Log.d(TAG, exception.getBestMessage());
+                }
+            });
+
+            if(seconds >= 7) {
+                Async.executeAsync(ParticleCloudSDK.getCloud(), new Async.ApiWork<ParticleCloud, Object>() {
+                    @Override
+                    public Object callApi(@NonNull ParticleCloud particleCloud) throws ParticleCloudException, IOException {
+                        Log.d(TAG, "Availble functions: " + mDevice.getFunctions());
+                        List<String> functionParameters = new ArrayList<String>();
+                        functionParameters.add("Exit");
+                        try {
+                            mDevice.callFunction("etime", functionParameters);
+
+                        } catch (ParticleDevice.FunctionDoesNotExistException e1) {
+                            e1.printStackTrace();
+                        }
+
+
+                        return -1;
+                    }
+
+                    @Override
+                    public void onSuccess(Object o) {
+                        // put your success message here
+                        Log.d(TAG, "Success!");
+                    }
+
+                    @Override
+                    public void onFailure(ParticleCloudException exception) {
+                        // put your error handling code here
+                        Log.d(TAG, exception.getBestMessage());
+                    }
+                });
+            }
+
+
+
 
             startTimer.setText(String.format("%d",seconds));
 
-            timerHandler.postDelayed(this, 500);
+            timerHandler.postDelayed(this, 1000);
+
+
         }
     };
 
