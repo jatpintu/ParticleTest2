@@ -29,6 +29,41 @@
         android:paddingBottom="10dp"
         />
     <TextView
+        android:id="@+id/mohammadLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:text="Amount of Mohammad"
+        android:textSize="10dp"
+        android:textStyle="bold"
+        android:layout_below="@id/startButton"
+        android:layout_marginTop="20dp"
+        />
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:max="100"
+        android:progress="50"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/mohammadLabel"/>
+
+    <TextView
+        android:id="@+id/timeLabelMohammad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Time slows down by:"
+        android:layout_below="@id/seekBar"
+        />
+    <TextView
+        android:id="@+id/scrollTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/seekBar"
+        android:layout_toRightOf="@id/timeLabelMohammad"
+        />
+
+
+    <TextView
         android:id="@+id/timerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
